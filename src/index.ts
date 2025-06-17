@@ -5,22 +5,6 @@
  * @author Kent C. Dodds <me@kentcdodds.com> (https://kentcdodds.com)
  */
 
-// This is a fork of match-sorter. Instead of offering
-// a unified API for filtering and sorting in a single pass,
-// match-sorter-utils provides the lower-level utilities of
-// ranking items and comparing ranks in a way that can
-// be incrementally applied to a system rather than
-// all-at-once.
-
-// 1. Use the rankItem function to rank an item
-// 2. Use the resulting rankingInfo.passed to filter
-// 3. Use the resulting rankingInfo.rank to sort
-
-// For bundling purposes (mainly remove-accents not being esm safe/ready),
-// we've also hard-coded remove-accents into this source.
-// The remove-accents package is still included as a dependency
-// for attribution purposes, but it will not be imported and bundled.
-
 export type AccessorAttributes = {
   threshold?: Ranking
   maxRanking: Ranking
@@ -269,7 +253,6 @@ function getMatchRanking<TItem>(
   }
 
   // contains
-  // if (testString.includes(stringToRank)) {
   if (match = new RegExp(searchString, `i`).exec(testString)) {
     return { rank: rankings.CONTAINS, index: match.index, length: match[0].length }
   }

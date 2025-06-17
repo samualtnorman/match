@@ -6,24 +6,24 @@
  */
 
 export type AccessorAttributes = {
-  threshold?: Ranking
-  maxRanking: Ranking
-  minRanking: Ranking
+	threshold?: Ranking
+	maxRanking: Ranking
+	minRanking: Ranking
 }
 
 export type RankingInfo = MatchRanking & {
-  rankedValue: any
-  rank: Ranking
-  accessorIndex: number
-  accessorThreshold: Ranking | undefined
-  passed: boolean
+	rankedValue: any
+	rank: Ranking
+	accessorIndex: number
+	accessorThreshold: Ranking | undefined
+	passed: boolean
 }
 
 export interface AccessorOptions<TItem> {
-  accessor: AccessorFn<TItem>
-  threshold?: Ranking
-  maxRanking?: Ranking
-  minRanking?: Ranking
+	accessor: AccessorFn<TItem>
+	threshold?: Ranking
+	maxRanking?: Ranking
+	minRanking?: Ranking
 }
 
 export type AccessorFn<TItem> = (item: TItem) => string | Array<string>
@@ -31,20 +31,20 @@ export type AccessorFn<TItem> = (item: TItem) => string | Array<string>
 export type Accessor<TItem> = AccessorFn<TItem> | AccessorOptions<TItem>
 
 export interface RankItemOptions<TItem = unknown> {
-  accessors?: ReadonlyArray<Accessor<TItem>>
-  threshold?: Ranking
-  keepDiacritics?: boolean
+	accessors?: ReadonlyArray<Accessor<TItem>>
+	threshold?: Ranking
+	keepDiacritics?: boolean
 }
 
 export const rankings = {
-  CASE_SENSITIVE_EQUAL: 7,
-  EQUAL: 6,
-  STARTS_WITH: 5,
-  WORD_STARTS_WITH: 4,
-  CONTAINS: 3,
-  ACRONYM: 2,
-  MATCHES: 1,
-  NO_MATCH: 0,
+	CASE_SENSITIVE_EQUAL: 7,
+	EQUAL: 6,
+	STARTS_WITH: 5,
+	WORD_STARTS_WITH: 4,
+	CONTAINS: 3,
+	ACRONYM: 2,
+	MATCHES: 1,
+	NO_MATCH: 0,
 } as const
 
 export type Ranking = (typeof rankings)[keyof typeof rankings]
@@ -57,78 +57,78 @@ export type Ranking = (typeof rankings)[keyof typeof rankings]
  * @return {{rank: Number, accessorIndex: Number, accessorThreshold: Number}} - the highest ranking
  */
 export function rankItem<TItem>(
-  item: TItem,
-  value: string,
-  options?: RankItemOptions<TItem>
+	item: TItem,
+	value: string,
+	options?: RankItemOptions<TItem>
 ): RankingInfo {
-  options = options || {}
+	options = options || {}
 
-  options.threshold = options.threshold ?? rankings.MATCHES
+	options.threshold = options.threshold ?? rankings.MATCHES
 
-  if (!options.accessors) {
-    // if keys is not specified, then we assume the item given is ready to be matched
-    const matchRanking = getMatchRanking(item as unknown as string, value, options)
-    return {
-      // ends up being duplicate of 'item' in matches but consistent
-      rankedValue: item,
-      ...matchRanking,
-      accessorIndex: -1,
-      accessorThreshold: options.threshold,
-      passed: matchRanking.rank >= options.threshold,
-    }
-  }
+	if (!options.accessors) {
+		// if keys is not specified, then we assume the item given is ready to be matched
+		const matchRanking = getMatchRanking(item as unknown as string, value, options)
+		return {
+			// ends up being duplicate of 'item' in matches but consistent
+			rankedValue: item,
+			...matchRanking,
+			accessorIndex: -1,
+			accessorThreshold: options.threshold,
+			passed: matchRanking.rank >= options.threshold,
+		}
+	}
 
-  const valuesToRank = getAllValuesToRank(item, options.accessors)
-  let bestMatchRanking: MatchRanking = { rank: rankings.NO_MATCH }
-  let passed = false
-  let accessorIndex = -1
-  let accessorThreshold = options.threshold
-  let rankedValue = item
+	const valuesToRank = getAllValuesToRank(item, options.accessors)
+	let bestMatchRanking: MatchRanking = { rank: rankings.NO_MATCH }
+	let passed = false
+	let accessorIndex = -1
+	let accessorThreshold = options.threshold
+	let rankedValue = item
 
-  for (let i = 0; i < valuesToRank.length; i++) {
-    const rankValue = valuesToRank[i]!
+	for (let i = 0; i < valuesToRank.length; i++) {
+		const rankValue = valuesToRank[i]!
 
-    let matchRanking = getMatchRanking(rankValue.itemValue, value, options)
-    let newRank = matchRanking.rank
+		let matchRanking = getMatchRanking(rankValue.itemValue, value, options)
+		let newRank = matchRanking.rank
 
-    const {
-      minRanking,
-      maxRanking,
-      threshold = options.threshold,
-    } = rankValue.attributes
+		const {
+			minRanking,
+			maxRanking,
+			threshold = options.threshold,
+		} = rankValue.attributes
 
-    if (newRank < minRanking && newRank >= rankings.MATCHES) {
-      newRank = minRanking
-    } else if (newRank > maxRanking) {
-      newRank = maxRanking
-    }
+		if (newRank < minRanking && newRank >= rankings.MATCHES) {
+			newRank = minRanking
+		} else if (newRank > maxRanking) {
+			newRank = maxRanking
+		}
 
-    newRank = Math.min(newRank, maxRanking) as Ranking
+		newRank = Math.min(newRank, maxRanking) as Ranking
 
-    if (
-      newRank >= threshold && (
-        newRank > bestMatchRanking.rank || (
-          matchRanking.rank == rankings.MATCHES &&
-            bestMatchRanking.rank == rankings.MATCHES &&
-            matchRanking.closeness > bestMatchRanking.closeness
-        )
-      )
-    ) {
-      bestMatchRanking = matchRanking
-      passed = true
-      accessorIndex = i
-      accessorThreshold = threshold
-      rankedValue = rankValue.itemValue as any
-    }
-  }
+		if (
+			newRank >= threshold && (
+				newRank > bestMatchRanking.rank || (
+					matchRanking.rank == rankings.MATCHES &&
+						bestMatchRanking.rank == rankings.MATCHES &&
+						matchRanking.closeness > bestMatchRanking.closeness
+				)
+			)
+		) {
+			bestMatchRanking = matchRanking
+			passed = true
+			accessorIndex = i
+			accessorThreshold = threshold
+			rankedValue = rankValue.itemValue as any
+		}
+	}
 
-  return {
-    rankedValue,
-    accessorIndex,
-    accessorThreshold,
-    passed,
-    ...bestMatchRanking
-  }
+	return {
+		rankedValue,
+		accessorIndex,
+		accessorThreshold,
+		passed,
+		...bestMatchRanking
+	}
 }
 
 const similarCharacters = `\
@@ -199,18 +199,18 @@ const similarCharacters = `\
 (?:q|q|q)`.split(`\n`)
 
 function searchRegex(search: string) {
-  for (const group of similarCharacters)
-    search = search.replace(new RegExp(group, `g`), group)
+	for (const group of similarCharacters)
+		search = search.replace(new RegExp(group, `g`), group)
 
-  return search
+	return search
 }
 
 type MatchRanking =
-  { rank: 0 | 6 | 7 } |
-  { rank: 1, index: number, length: number, closeness: number } |
-  { rank: 2, indexes: number[] } |
-  { rank: 3 | 4, index: number, length: number } |
-  { rank: 5, length: number }
+	{ rank: 0 | 6 | 7 } |
+	{ rank: 1, index: number, length: number, closeness: number } |
+	{ rank: 2, indexes: number[] } |
+	{ rank: 3 | 4, index: number, length: number } |
+	{ rank: 5, length: number }
 
 /**
  * Gives a rankings score based on how well the two strings match.
@@ -220,59 +220,59 @@ type MatchRanking =
  * @returns {Number} the ranking for how well stringToRank matches testString
  */
 function getMatchRanking<TItem>(
-  testString: string,
-  stringToRank: string,
-  options: RankItemOptions<TItem>
+	testString: string,
+	stringToRank: string,
+	options: RankItemOptions<TItem>
 ): MatchRanking {
-  let searchString = stringToRank
+	let searchString = stringToRank
 
-  if (!options.keepDiacritics) {
-    searchString = searchRegex(searchString)
-  }
+	if (!options.keepDiacritics) {
+		searchString = searchRegex(searchString)
+	}
 
-  // case sensitive equals
-  if (new RegExp(`^${searchString}$`).test(testString)) {
-    return { rank: rankings.CASE_SENSITIVE_EQUAL }
-  }
+	// case sensitive equals
+	if (new RegExp(`^${searchString}$`).test(testString)) {
+		return { rank: rankings.CASE_SENSITIVE_EQUAL }
+	}
 
-  // case insensitive equals
-  if (new RegExp(`^${searchString}$`, `i`).test(testString)) {
-    return { rank: rankings.EQUAL }
-  }
+	// case insensitive equals
+	if (new RegExp(`^${searchString}$`, `i`).test(testString)) {
+		return { rank: rankings.EQUAL }
+	}
 
-  let match
+	let match
 
-  // starts with
-  if (match = new RegExp(`^${searchString}`, `i`).exec(testString)) {
-    return { rank: rankings.STARTS_WITH, length: match[0].length }
-  }
+	// starts with
+	if (match = new RegExp(`^${searchString}`, `i`).exec(testString)) {
+		return { rank: rankings.STARTS_WITH, length: match[0].length }
+	}
 
-  // word starts with
-  if (match = new RegExp(`\\s${searchString}`, `i`).exec(testString)) {
-    return { rank: rankings.WORD_STARTS_WITH, index: match.index + 1, length: match[0].length - 1 }
-  }
+	// word starts with
+	if (match = new RegExp(`\\s${searchString}`, `i`).exec(testString)) {
+		return { rank: rankings.WORD_STARTS_WITH, index: match.index + 1, length: match[0].length - 1 }
+	}
 
-  // contains
-  if (match = new RegExp(searchString, `i`).exec(testString)) {
-    return { rank: rankings.CONTAINS, index: match.index, length: match[0].length }
-  }
+	// contains
+	if (match = new RegExp(searchString, `i`).exec(testString)) {
+		return { rank: rankings.CONTAINS, index: match.index, length: match[0].length }
+	}
 
-  // acronym
-  if (match = new RegExp(stringToRank.split(``).map(character => `(^|\\s|-)(${searchRegex(character)})(.*)`).join(``)).exec(testString)) {
-    const indexes: number[] = []
-    let index = match.index
+	// acronym
+	if (match = new RegExp(stringToRank.split(``).map(character => `(^|\\s|-)(${searchRegex(character)})(.*)`).join(``)).exec(testString)) {
+		const indexes: number[] = []
+		let index = match.index
 
-    for (const [ arrayIndex, value ] of match.slice(1).entries()) {
-      if (!((arrayIndex + 2) % 3))
-        indexes.push(index)
+		for (const [ arrayIndex, value ] of match.slice(1).entries()) {
+			if (!((arrayIndex + 2) % 3))
+				indexes.push(index)
 
-      index += value.length
-    }
+			index += value.length
+		}
 
-    return { rank: rankings.ACRONYM, indexes }
-  }
+		return { rank: rankings.ACRONYM, indexes }
+	}
 
-  return getClosenessRanking(testString, stringToRank)
+	return getClosenessRanking(testString, stringToRank)
 }
 
 /**
@@ -286,47 +286,47 @@ function getMatchRanking<TItem>(
  * rankings.MATCHES + 1 for how well stringToRank matches testString
  */
 function getClosenessRanking(
-  testString: string,
-  stringToRank: string
+	testString: string,
+	stringToRank: string
 ): MatchRanking {
-  let matchingInOrderCharCount = 0
-  let charNumber = 0
-  function findMatchingCharacter(
-    matchChar: undefined | string,
-    string: string,
-    index: number
-  ) {
-    for (let j = index, J = string.length; j < J; j++) {
-      const stringChar = string[j]
-      if (stringChar === matchChar) {
-        matchingInOrderCharCount += 1
-        return j + 1
-      }
-    }
-    return -1
-  }
-  const firstIndex = findMatchingCharacter(stringToRank[0], testString, 0)
-  if (firstIndex < 0) {
-    return { rank: rankings.NO_MATCH }
-  }
-  charNumber = firstIndex
-  for (let i = 1, I = stringToRank.length; i < I; i++) {
-    const matchChar = stringToRank[i]
-    charNumber = findMatchingCharacter(matchChar, testString, charNumber)
-    const found = charNumber > -1
-    if (!found) {
-      return { rank: rankings.NO_MATCH }
-    }
-  }
+	let matchingInOrderCharCount = 0
+	let charNumber = 0
+	function findMatchingCharacter(
+		matchChar: undefined | string,
+		string: string,
+		index: number
+	) {
+		for (let j = index, J = string.length; j < J; j++) {
+			const stringChar = string[j]
+			if (stringChar === matchChar) {
+				matchingInOrderCharCount += 1
+				return j + 1
+			}
+		}
+		return -1
+	}
+	const firstIndex = findMatchingCharacter(stringToRank[0], testString, 0)
+	if (firstIndex < 0) {
+		return { rank: rankings.NO_MATCH }
+	}
+	charNumber = firstIndex
+	for (let i = 1, I = stringToRank.length; i < I; i++) {
+		const matchChar = stringToRank[i]
+		charNumber = findMatchingCharacter(matchChar, testString, charNumber)
+		const found = charNumber > -1
+		if (!found) {
+			return { rank: rankings.NO_MATCH }
+		}
+	}
 
-  const length = charNumber - firstIndex
+	const length = charNumber - firstIndex
 
-  return {
-    rank: rankings.MATCHES,
-    index: length,
-    length: matchingInOrderCharCount,
-    closeness: (matchingInOrderCharCount / stringToRank.length) * (1 / length)
-  }
+	return {
+		rank: rankings.MATCHES,
+		index: length,
+		length: matchingInOrderCharCount,
+		closeness: (matchingInOrderCharCount / stringToRank.length) * (1 / length)
+	}
 }
 
 /**
@@ -336,7 +336,7 @@ function getClosenessRanking(
  * @return {Number} -1 if a should come first, 1 if b should come first, 0 if equal
  */
 export function compareItems<TItem>(a: RankingInfo, b: RankingInfo): number {
-  return a.rank == rankings.MATCHES && b.rank == rankings.MATCHES ? b.closeness - a.closeness : b.rank - a.rank
+	return a.rank == rankings.MATCHES && b.rank == rankings.MATCHES ? b.closeness - a.closeness : b.rank - a.rank
 }
 
 /**
@@ -346,27 +346,27 @@ export function compareItems<TItem>(a: RankingInfo, b: RankingInfo): number {
  * @return {Array} - an array containing the value(s) at the nested keypath
  */
 function getItemValues<TItem>(
-  item: TItem,
-  accessor: Accessor<TItem>
+	item: TItem,
+	accessor: Accessor<TItem>
 ): Array<string> {
-  let accessorFn = accessor as AccessorFn<TItem>
+	let accessorFn = accessor as AccessorFn<TItem>
 
-  if (typeof accessor === 'object') {
-    accessorFn = accessor.accessor
-  }
+	if (typeof accessor === 'object') {
+		accessorFn = accessor.accessor
+	}
 
-  const value = accessorFn(item)
+	const value = accessorFn(item)
 
-  // because `value` can also be undefined
-  if (value == null) {
-    return []
-  }
+	// because `value` can also be undefined
+	if (value == null) {
+		return []
+	}
 
-  if (Array.isArray(value)) {
-    return value
-  }
+	if (Array.isArray(value)) {
+		return value
+	}
 
-  return [String(value)]
+	return [String(value)]
 }
 
 /**
@@ -376,30 +376,30 @@ function getItemValues<TItem>(
  * @return objects with {itemValue, attributes}
  */
 function getAllValuesToRank<TItem>(
-  item: TItem,
-  accessors: ReadonlyArray<Accessor<TItem>>
+	item: TItem,
+	accessors: ReadonlyArray<Accessor<TItem>>
 ) {
-  const allValues: Array<{
-    itemValue: string
-    attributes: AccessorAttributes
-  }> = []
-  for (let j = 0, J = accessors.length; j < J; j++) {
-    const accessor = accessors[j]!
-    const attributes = getAccessorAttributes(accessor)
-    const itemValues = getItemValues(item, accessor)
-    for (let i = 0, I = itemValues.length; i < I; i++) {
-      allValues.push({
-        itemValue: itemValues[i]!,
-        attributes,
-      })
-    }
-  }
-  return allValues
+	const allValues: Array<{
+		itemValue: string
+		attributes: AccessorAttributes
+	}> = []
+	for (let j = 0, J = accessors.length; j < J; j++) {
+		const accessor = accessors[j]!
+		const attributes = getAccessorAttributes(accessor)
+		const itemValues = getItemValues(item, accessor)
+		for (let i = 0, I = itemValues.length; i < I; i++) {
+			allValues.push({
+				itemValue: itemValues[i]!,
+				attributes,
+			})
+		}
+	}
+	return allValues
 }
 
 const defaultKeyAttributes = {
-  maxRanking: Infinity as Ranking,
-  minRanking: -Infinity as Ranking,
+	maxRanking: Infinity as Ranking,
+	minRanking: -Infinity as Ranking,
 }
 /**
  * Gets all the attributes for the given accessor
@@ -407,10 +407,10 @@ const defaultKeyAttributes = {
  * @return object containing the accessor's attributes
  */
 function getAccessorAttributes<TItem>(
-  accessor: Accessor<TItem>
+	accessor: Accessor<TItem>
 ): AccessorAttributes {
-  if (typeof accessor === 'function') {
-    return defaultKeyAttributes
-  }
-  return { ...defaultKeyAttributes, ...accessor }
+	if (typeof accessor === 'function') {
+		return defaultKeyAttributes
+	}
+	return { ...defaultKeyAttributes, ...accessor }
 }

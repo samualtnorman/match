@@ -340,7 +340,7 @@ function getClosenessRanking(
  * @param {Object} b - the second item to sort
  * @return {Number} -1 if a should come first, 1 if b should come first, 0 if equal
  */
-export function compareItems<TItem>(a: RankingInfo, b: RankingInfo): number {
+export function compareItems(a: RankingInfo, b: RankingInfo): number {
 	return a.rank == rankings.MATCHES && b.rank == rankings.MATCHES ? b.closeness - a.closeness : b.rank - a.rank
 }
 

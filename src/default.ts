@@ -5,6 +5,7 @@
  * @author Kent C. Dodds <me@kentcdodds.com> (https://kentcdodds.com)
  */
 
+/***/
 export type AccessorAttributes = {
 	threshold?: Ranking
 	maxRanking: Ranking
@@ -131,6 +132,10 @@ export function rankItem<TItem>(
 	}
 }
 
+// This list is taken from
+// https://github.com/TanStack/table/blob/0cc6992c7836489661a0954a2b56e620850ad4da/packages/match-sorter-utils/src/remove-accents.ts
+// which itself is taken from
+// https://github.com/tyxla/remove-accents/blob/181808eb89732155a3a3352b3643e523ab565594/index.js
 const similarCharacters = `\
 \\s
 (?:AE|Æ|Ǽ)

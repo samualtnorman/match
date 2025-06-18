@@ -1,0 +1,18 @@
+{
+	"extends": "..",
+	"include": [ "*" ],
+	"compilerOptions": {
+		// Modules
+		"rootDir": ".",
+
+		// Emit
+		"declaration": true,
+		"outDir": "../dist",
+
+		// JavaScript Support
+		"checkJs": false,
+
+		// Interop Constraints
+		"isolatedDeclarations": true,
+	}
+}
